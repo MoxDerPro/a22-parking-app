@@ -1,0 +1,32 @@
+<div style="padding: 20px; font-family: sans-serif;">
+  <h2 style="color: #004a99;">A22 Parkplatz Verfügbarkeit</h2>
+
+  <div *ngIf="stations.length === 0" style="padding: 20px;">
+    Suche nach aktuellen Daten...
+  </div>
+
+  <div *ngFor="let p of stations"
+       style="border: 1px solid #ddd;
+              border-radius: 8px;
+              margin-bottom: 15px;
+              padding: 15px;
+              box-shadow: 2px 2px 5px rgba(0,0,0,0.05);
+              background-color: white;">
+
+    <h3 style="margin-top: 0; color: #333;">
+      {{ p.sname || p.StationName || 'Unbekannter Parkplatz' }}
+    </h3>
+
+    <div style="font-size: 1.1em;">
+  <span style="font-weight: bold;">Status:</span>
+
+  <span [style.color]="p.savailable === true || p.savailable > 0 ? 'green' : 'red'">
+    {{ p.savailable === true ? 'Plätze verfügbar' : (p.savailable === false ? 'Besetzt' : p.savailable + ' Plätze') }}
+  </span>
+</div>
+
+    <div style="margin-top: 10px; font-size: 0.9em; color: #666;">
+      ID: {{ p.scode }}
+    </div>
+  </div>
+</div>
