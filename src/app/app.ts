@@ -6,7 +6,7 @@ import { ParkingListComponent } from './parking-list/parking-list';
   standalone: true,
   imports: [ParkingListComponent],
   templateUrl: './app.html',    // Nur app.html, da kein ".component" im Namen
-  styleUrl: './app.css'        // Nur app.scss
+  styleUrls: ['./app.css']
 })
 export class AppComponent {
   title = 'my-parking-app';

@@ -1,32 +1,93 @@
-<div style="padding: 20px; font-family: sans-serif;">
-  <h2 style="color: #004a99;">A22 Parkplatz Verfügbarkeit</h2>
+<div class="app-shell">
+  <section class="hero">
+    <div>
+      <h2>Brenner ParkRadar</h2>
+      <p>Finde freie Stellplätze entlang der A22</p>
+    </div>
+    <span class="hero-badge">P</span>
+  </section>
 
-  <div *ngIf="stations.length === 0" style="padding: 20px;">
+  <div *ngIf="loading" class="status-box status-loading">
     Suche nach aktuellen Daten...
   </div>
 
-  <div *ngFor="let p of stations"
-       style="border: 1px solid #ddd;
-              border-radius: 8px;
-              margin-bottom: 15px;
-              padding: 15px;
-              box-shadow: 2px 2px 5px rgba(0,0,0,0.05);
-              background-color: white;">
-
-    <h3 style="margin-top: 0; color: #333;">
-      {{ p.sname || p.StationName || 'Unbekannter Parkplatz' }}
-    </h3>
-
-    <div style="font-size: 1.1em;">
-  <span style="font-weight: bold;">Status:</span>
-
-  <span [style.color]="p.savailable === true || p.savailable > 0 ? 'green' : 'red'">
-    {{ p.savailable === true ? 'Plätze verfügbar' : (p.savailable === false ? 'Besetzt' : p.savailable + ' Plätze') }}
-  </span>
-</div>
-
-    <div style="margin-top: 10px; font-size: 0.9em; color: #666;">
-      ID: {{ p.scode }}
-    </div>
+  <div *ngIf="error" class="status-box status-error">
+    Fehler beim Laden: {{ error }}
   </div>
+
+  <div *ngIf="!loading && !error && stations.length === 0" class="status-box status-empty">
+    Keine Parkplätze gefunden.
+  </div>
+
+  <section class="parking-list">
+    <div class="tab-row">
+      <button type="button" class="tab-button" [class.active]="selectedTab === 'all'" (click)="selectTab('all')">
+        Alle
+      </button>
+      <button type="button" class="tab-button" [class.active]="selectedTab === 'favorites'" (click)="selectTab('favorites')">
+        Favoriten
+      </button>
+    </div>
+
+    <div *ngIf="favorites.size > 0" class="favorite-summary">
+      Favoriten: {{ favorites.size }} ausgewählt
+    </div>
+
+    <div *ngIf="selectedTab === 'favorites' && filteredStations.length === 0" class="status-box status-empty">
+      Keine Favoriten vorhanden. Markiere einen Parkplatz als Favorit, um ihn hier zu sehen.
+    </div>
+
+    <article *ngFor="let p of filteredStations" class="parking-card" [class.favorite]="isFavorite(p)">
+      <div class="parking-card-header">
+        <button type="button" class="parking-toggle" (click)="toggleStation(p)" [attr.aria-expanded]="selectedStation === p">
+          <div>
+            <h3 class="parking-title">{{ p.sname || p.StationName || 'Unbekannter Parkplatz' }}</h3>
+            <p class="parking-meta">ID: {{ p.scode }}</p>
+          </div>
+          <span class="status-pill" [ngClass]="p.savailable === true || p.savailable > 0 ? 'status-available' : 'status-full'">
+            {{ getStatusLabel(p) }}
+          </span>
+        </button>
+        <button type="button" class="favorite-button" (click)="toggleFavorite(p); $event.stopPropagation()" [attr.aria-pressed]="isFavorite(p)">
+          <span [class.favorited]="isFavorite(p)">★</span>
+        </button>
+      </div>
+
+      <div *ngIf="selectedStation === p" class="detail-card">
+        <div class="info-row">
+          <strong>Autobahn:</strong>
+          <span>{{ p.sorigin || 'Unbekannt' }}</span>
+        </div>
+        <div class="info-row">
+          <strong>Verfügbarkeit:</strong>
+          <span>{{ getStatusLabel(p) }}</span>
+        </div>
+        <div class="info-row">
+          <strong>Position auf der Karte:</strong>
+          <span></span>
+        </div>
+        <div class="map-row">
+          <div *ngIf="p.scoordinate; else noMap" class="map-frame">
+            <iframe [src]="getMapUrl(p)" width="100%" height="250" frameborder="0"></iframe>
+          </div>
+        </div>
+        <ng-template #noMap>
+          <div class="map-row" style="color: #64748b;">Keine Koordinaten vorhanden</div>
+        </ng-template>
+        <div class="info-row">
+          <strong>Kapazität:</strong>
+          <span>{{ p.smetadata?.['capacità'] ?? p.smetadata?.['capacitá'] ?? p.smetadata?.metro ?? 'N/A' }}</span>
+        </div>
+        <div class="info-row">
+          <strong>Typ:</strong>
+          <span>{{ p.stype || 'Unbekannt' }}</span>
+        </div>
+        <div class="info-row">
+          <strong>Aktiv:</strong>
+          <span>{{ p.sactive === true ? 'Ja' : 'Nein' }}</span>
+        </div>
+        <p class="note-text">Tippe erneut, um die Detailansicht zu schließen.</p>
+      </div>
+    </article>
+  </section>
 </div>
