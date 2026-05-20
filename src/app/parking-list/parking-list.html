@@ -32,6 +32,10 @@
       </button>
     </div>
 
+    <div *ngIf="lastUpdated" class="last-updated">
+      Aktualisiert: {{ lastUpdated | date:'dd.MM.yyyy, HH:mm' }} Uhr
+    </div>
+
     <div *ngIf="selectedTab !== 'map'" class="search-row">
       <input
         type="search"

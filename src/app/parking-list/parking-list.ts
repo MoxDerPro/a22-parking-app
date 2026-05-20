@@ -18,6 +18,7 @@ export class ParkingListComponent implements OnInit, OnDestroy {
   selectedStation: any | null = null;
   selectedTab: 'all' | 'favorites' | 'map' = 'all';
   searchQuery = '';
+  lastUpdated: Date | null = null;
   favorites = new Set<string>();
   private readonly favoritesKey = 'a22-parking-favorites';
 
@@ -46,6 +47,7 @@ export class ParkingListComponent implements OnInit, OnDestroy {
     this.ps.getStations().subscribe({
       next: (res: any) => {
         this.stations = res?.data ?? [];
+        this.lastUpdated = new Date();
         this.loading = false;
         this.cdr.detectChanges();
       },
