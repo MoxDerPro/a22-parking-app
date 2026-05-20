@@ -1,22 +1,37 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ParkingService } from '../parking';
 
 @Component({
   selector: 'app-parking-list',
   standalone: true,
-  imports: [CommonModule],
-  templateUrl: './parking-list.html', // Achte darauf, dass der Dateiname stimmt
+  imports: [CommonModule, FormsModule],
+  templateUrl: './parking-list.html',
+  styleUrls: ['./parking-list.css'],
 })
-export class ParkingListComponent implements OnInit {
+export class ParkingListComponent implements OnInit, OnDestroy {
   stations: any[] = [];
   loading = true;
   error: string | null = null;
   selectedStation: any | null = null;
-  selectedTab: 'all' | 'favorites' = 'all';
+  selectedTab: 'all' | 'favorites' | 'map' = 'all';
+  searchQuery = '';
   favorites = new Set<string>();
   private readonly favoritesKey = 'a22-parking-favorites';
+
+  private readonly messageHandler = (event: MessageEvent) => {
+    if (event.data?.type !== 'parking-select') return;
+    const station = this.stations.find((s) => this.getStationId(s) === event.data.id);
+    if (!station) return;
+    this.selectedTab = 'all';
+    this.selectedStation = station;
+    this.cdr.detectChanges();
+    setTimeout(() => {
+      document.getElementById('station-' + event.data.id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  };
 
   constructor(
     private ps: ParkingService,
@@ -27,20 +42,23 @@ export class ParkingListComponent implements OnInit {
   }
 
   ngOnInit() {
+    window.addEventListener('message', this.messageHandler);
     this.ps.getStations().subscribe({
       next: (res: any) => {
-        console.log('Daten erhalten:', res); // Das zeigt dir die Daten in der F12 Konsole
         this.stations = res?.data ?? [];
         this.loading = false;
         this.cdr.detectChanges();
       },
       error: (err) => {
-        console.error('Fehler beim Laden:', err); // Das zeigt dir den Fehler
         this.error = err?.message ?? 'Fehler beim Laden der Daten';
         this.loading = false;
         this.cdr.detectChanges();
       }
     });
+  }
+
+  ngOnDestroy() {
+    window.removeEventListener('message', this.messageHandler);
   }
 
   private loadFavorites() {
@@ -53,7 +71,7 @@ export class ParkingListComponent implements OnInit {
         }
       }
     } catch {
-      // Wenn localStorage nicht verfügbar ist, einfach ohne Favoriten starten.
+      // ignore
     }
   }
 
@@ -61,7 +79,7 @@ export class ParkingListComponent implements OnInit {
     try {
       localStorage.setItem(this.favoritesKey, JSON.stringify(Array.from(this.favorites)));
     } catch {
-      // Ignore storage errors.
+      // ignore
     }
   }
 
@@ -80,15 +98,47 @@ export class ParkingListComponent implements OnInit {
   }
 
   get filteredStations(): any[] {
-    if (this.selectedTab === 'favorites') {
-      return this.stations.filter((station) => this.isFavorite(station));
+    let list = this.selectedTab === 'favorites'
+      ? this.stations.filter((s) => this.isFavorite(s))
+      : this.stations;
+    const q = this.searchQuery.trim().toLowerCase();
+    if (q) {
+      list = list.filter((s) =>
+        (s.sname ?? '').toLowerCase().includes(q) ||
+        (s.scode ?? '').toLowerCase().includes(q)
+      );
     }
-    return this.stations;
+    return list;
   }
 
-  selectTab(tab: 'all' | 'favorites') {
+  selectTab(tab: 'all' | 'favorites' | 'map') {
     this.selectedTab = tab;
     this.selectedStation = null;
+    this.searchQuery = '';
+  }
+
+  get mapMarkers(): Array<{ lat: number; lon: number; label: string; id: string }> {
+    return this.stations
+      .filter((station) => station?.scoordinate?.x != null && station?.scoordinate?.y != null)
+      .map((station) => ({
+        lat: station.scoordinate.y,
+        lon: station.scoordinate.x,
+        label: station.sname || station.scode || 'Parkplatz',
+        id: this.getStationId(station)
+      }));
+  }
+
+  get mapOverviewUrl(): SafeResourceUrl | null {
+    const markers = this.mapMarkers;
+    if (markers.length === 0) {
+      return null;
+    }
+    try {
+      sessionStorage.setItem('a22-parking-map-markers', JSON.stringify(markers));
+    } catch {
+      // ignore
+    }
+    return this.sanitizer.bypassSecurityTrustResourceUrl('/parking-map.html');
   }
 
   private getStationId(station: any): string {
@@ -127,4 +177,3 @@ export class ParkingListComponent implements OnInit {
     return this.sanitizer.bypassSecurityTrustResourceUrl(url);
   }
 }
-

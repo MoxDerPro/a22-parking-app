@@ -2,7 +2,7 @@
   <section class="hero">
     <div>
       <h2>Brenner ParkRadar</h2>
-      <p>Finde freie Stellplätze entlang der A22</p>
+      <p>Finde freie Stellplätze entlang der Brennerautobahn!</p>
     </div>
     <span class="hero-badge">P</span>
   </section>
@@ -27,17 +27,49 @@
       <button type="button" class="tab-button" [class.active]="selectedTab === 'favorites'" (click)="selectTab('favorites')">
         Favoriten
       </button>
+      <button type="button" class="tab-button" [class.active]="selectedTab === 'map'" (click)="selectTab('map')">
+        Karte
+      </button>
+    </div>
+
+    <div *ngIf="selectedTab !== 'map'" class="search-row">
+      <input
+        type="search"
+        class="search-input"
+        placeholder="Parkplatz suchen..."
+        [(ngModel)]="searchQuery"
+      />
     </div>
 
     <div *ngIf="favorites.size > 0" class="favorite-summary">
       Favoriten: {{ favorites.size }} ausgewählt
     </div>
 
-    <div *ngIf="selectedTab === 'favorites' && filteredStations.length === 0" class="status-box status-empty">
+    <div *ngIf="selectedTab === 'favorites' && filteredStations.length === 0 && !searchQuery" class="status-box status-empty">
       Keine Favoriten vorhanden. Markiere einen Parkplatz als Favorit, um ihn hier zu sehen.
     </div>
 
-    <article *ngFor="let p of filteredStations" class="parking-card" [class.favorite]="isFavorite(p)">
+    <div *ngIf="selectedTab !== 'map' && searchQuery && filteredStations.length === 0" class="status-box status-empty">
+      Keine Ergebnisse für „{{ searchQuery }}".
+    </div>
+
+    <div *ngIf="selectedTab === 'map'" class="map-overview-card">
+      <div class="info-row">
+        <strong>Alle Parkplätze:</strong>
+        <span>{{ mapMarkers.length }} Positionen</span>
+      </div>
+      <div class="map-row">
+        <div *ngIf="mapMarkers.length > 0; else noMapOverview" class="map-frame">
+          <iframe [src]="mapOverviewUrl" width="100%" height="520" frameborder="0"></iframe>
+        </div>
+      </div>
+      <ng-template #noMapOverview>
+        <div class="status-box status-empty">Keine Kartenpositionen verfügbar.</div>
+      </ng-template>
+    </div>
+
+    <ng-container *ngIf="selectedTab !== 'map'">
+      <article *ngFor="let p of filteredStations" class="parking-card" [class.favorite]="isFavorite(p)" [id]="'station-' + p.scode">
       <div class="parking-card-header">
         <button type="button" class="parking-toggle" (click)="toggleStation(p)" [attr.aria-expanded]="selectedStation === p">
           <div>
@@ -89,5 +121,4 @@
         <p class="note-text">Tippe erneut, um die Detailansicht zu schließen.</p>
       </div>
     </article>
-  </section>
-</div>
+    </ng-container>

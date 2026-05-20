@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <title>Parkplätze Karte</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      width: 100%;
+      font-family: system-ui, sans-serif;
+      background: #f8fafc;
+    }
+    #map {
+      height: 100%;
+      min-height: 100vh;
+    }
+    .notice {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      color: #334155;
+      font-size: 1rem;
+      padding: 1rem;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <div id="notice" class="notice" style="display:none;"></div>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <script>
+    const storageKey = 'a22-parking-map-markers';
+    let markers = [];
+
+    function showNotice(message) {
+      document.getElementById('map').style.display = 'none';
+      const notice = document.getElementById('notice');
+      notice.textContent = message;
+      notice.style.display = 'flex';
+    }
+
+    try {
+      const stored = sessionStorage.getItem(storageKey);
+      if (stored) {
+        markers = JSON.parse(stored);
+      } else {
+        const params = new URLSearchParams(window.location.search);
+        const encoded = params.get('markers');
+        if (encoded) {
+          markers = JSON.parse(decodeURIComponent(encoded));
+        }
+      }
+    } catch (err) {
+      console.error('Marker-Daten konnten nicht geladen werden:', err);
+      showNotice('Die Karte konnte nicht geladen werden. Bitte versuche es erneut.');
+    }
+
+    if (!Array.isArray(markers) || markers.length === 0) {
+      showNotice('Keine Kartenpositionen verfügbar. Bitte wechsle zurück zur App und lade die Daten erneut.');
+    } else {
+      const map = L.map('map');
+      const bounds = L.latLngBounds(markers.map((item) => [item.lat, item.lon]));
+      map.fitBounds(bounds.pad(0.15));
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap contributors'
+      }).addTo(map);
+
+      function openDetail(id) {
+        window.parent.postMessage({ type: 'parking-select', id: id }, '*');
+      }
+
+      markers.forEach((item) => {
+        const marker = L.marker([item.lat, item.lon]).addTo(map);
+        const escapedLabel = String(item.label).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const escapedId = String(item.id).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+        marker.bindPopup(
+          `<div style="text-align:center;min-width:130px">
+            <strong>${escapedLabel}</strong><br>
+            <button onclick="openDetail('${escapedId}')"
+              style="margin-top:0.5rem;padding:0.3rem 0.9rem;background:#2563eb;color:#fff;border:none;border-radius:0.4rem;cursor:pointer;font-size:0.85rem">
+              Details öffnen
+            </button>
+          </div>`
+        );
+      });
+    }
+  </script>
+</body>
+</html>
