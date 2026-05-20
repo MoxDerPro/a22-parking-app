@@ -17,18 +17,18 @@
 
 .theme-toggle:hover {
   background: white;
-  border-color: #2563eb;
-  color: #2563eb;
+  border-color: #007038;
+  color: #007038;
 }
 
 body.dark .theme-toggle {
-  background: rgba(15, 23, 42, 0.92);
-  border-color: rgba(148, 163, 184, 0.25);
+  background: rgba(36, 36, 36, 0.95);
+  border-color: rgba(255, 255, 255, 0.12);
   color: #f8fafc;
 }
 
 body.dark .theme-toggle:hover {
-  background: #1e293b;
-  border-color: #38bdf8;
-  color: #38bdf8;
+  background: #2a2a2a;
+  border-color: #4ade80;
+  color: #4ade80;
 }

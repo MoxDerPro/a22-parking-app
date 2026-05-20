@@ -4,7 +4,9 @@
       <h2>Brenner ParkRadar</h2>
       <p>Finde freie Stellplätze entlang der Brennerautobahn!</p>
     </div>
-    <span class="hero-badge">P</span>
+    <div class="hero-logo-wrap">
+      <img src="/a22-logo.png" alt="A22 Brennerautobahn" class="hero-logo" />
+    </div>
   </section>
 
   <div *ngIf="loading" class="status-box status-loading">
@@ -112,7 +114,31 @@
         </ng-template>
         <div class="info-row">
           <strong>Kapazität:</strong>
-          <span>{{ p.smetadata?.['capacità'] ?? p.smetadata?.['capacitá'] ?? p.smetadata?.metro ?? 'N/A' }}</span>
+          <span>{{ p.smetadata?.['capacità'] ?? p.smetadata?.['capacitá'] ?? 'N/A' }} Plätze</span>
+        </div>
+        <div class="info-row">
+          <strong>Fahrtrichtung:</strong>
+          <span>{{ p.smetadata?.iddirezione || 'N/A' }}</span>
+        </div>
+        <div class="info-row">
+          <strong>Fahrzeugtyp:</strong>
+          <span>{{ getVehicleTypeLabel(p) }}</span>
+        </div>
+        <div class="info-row">
+          <strong>Ladestation:</strong>
+          <span>{{ p.smetadata?.netex_parking?.charging ? 'Ja' : 'Nein' }}</span>
+        </div>
+        <div class="info-row">
+          <strong>Videoüberwachung:</strong>
+          <span>{{ p.smetadata?.netex_parking?.surveillance ? 'Ja' : 'Nein' }}</span>
+        </div>
+        <div class="info-row">
+          <strong>Gefahrgut verboten:</strong>
+          <span>{{ p.smetadata?.netex_parking?.hazard_prohibited ? 'Ja' : 'Nein' }}</span>
+        </div>
+        <div class="info-row">
+          <strong>Streckenposition:</strong>
+          <span>{{ p.smetadata?.metro != null ? (p.smetadata.metro / 1000 | number:'1.1-1') + ' km' : 'N/A' }}</span>
         </div>
         <div class="info-row">
           <strong>Typ:</strong>

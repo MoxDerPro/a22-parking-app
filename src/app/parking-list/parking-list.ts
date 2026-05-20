@@ -119,14 +119,15 @@ export class ParkingListComponent implements OnInit, OnDestroy {
     this.searchQuery = '';
   }
 
-  get mapMarkers(): Array<{ lat: number; lon: number; label: string; id: string }> {
+  get mapMarkers(): Array<{ lat: number; lon: number; label: string; id: string; favorite: boolean }> {
     return this.stations
       .filter((station) => station?.scoordinate?.x != null && station?.scoordinate?.y != null)
       .map((station) => ({
         lat: station.scoordinate.y,
         lon: station.scoordinate.x,
         label: station.sname || station.scode || 'Parkplatz',
-        id: this.getStationId(station)
+        id: this.getStationId(station),
+        favorite: this.isFavorite(station)
       }));
   }
 
@@ -159,6 +160,18 @@ export class ParkingListComponent implements OnInit, OnDestroy {
       return 'Besetzt';
     }
     return `${station.savailable} Plätze`;
+  }
+
+  getVehicleTypeLabel(station: any): string {
+    const type = station?.smetadata?.netex_parking?.vehicletypes;
+    const map: Record<string, string> = {
+      heavyGoodsVehicle: 'LKW / Schwerverkehr',
+      car: 'PKW',
+      bus: 'Bus',
+      motorcycle: 'Motorrad',
+      allVehicles: 'Alle Fahrzeuge',
+    };
+    return map[type] ?? type ?? 'Unbekannt';
   }
 
   getMapUrl(station: any): SafeResourceUrl | null {

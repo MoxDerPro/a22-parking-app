@@ -16,9 +16,9 @@
 }
 
 .tab-button.active {
-  background: #2563eb;
+  background: #007038;
   color: white;
-  border-color: #2563eb;
+  border-color: #007038;
 }
 
 .map-overview-card {
@@ -66,7 +66,7 @@
 }
 
 .search-input:focus {
-  border-color: #2563eb;
+  border-color: #007038;
   background: white;
 }
 

@@ -78,15 +78,30 @@
         window.parent.postMessage({ type: 'parking-select', id: id }, '*');
       }
 
+      function createIcon(isFavorite) {
+        const color = isFavorite ? '#007038' : '#475569';
+        const size = isFavorite ? 20 : 14;
+        const shadow = isFavorite ? '0 2px 8px rgba(0,112,56,0.5)' : '0 2px 5px rgba(0,0,0,0.3)';
+        const star = isFavorite ? '<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:white;font-size:10px;line-height:1">&#9733;</div>' : '';
+        return L.divIcon({
+          className: '',
+          html: `<div style="position:relative;width:${size}px;height:${size}px;border-radius:50%;background:${color};border:2.5px solid white;box-shadow:${shadow}">${star}</div>`,
+          iconSize: [size, size],
+          iconAnchor: [size / 2, size / 2],
+          popupAnchor: [0, -size / 2 - 4]
+        });
+      }
+
       markers.forEach((item) => {
-        const marker = L.marker([item.lat, item.lon]).addTo(map);
+        const marker = L.marker([item.lat, item.lon], { icon: createIcon(item.favorite) }).addTo(map);
         const escapedLabel = String(item.label).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         const escapedId = String(item.id).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
         marker.bindPopup(
           `<div style="text-align:center;min-width:130px">
+            ${item.favorite ? '<div style="color:#007038;font-weight:700;font-size:0.8rem;margin-bottom:4px">&#9733; Favorit</div>' : ''}
             <strong>${escapedLabel}</strong><br>
             <button onclick="openDetail('${escapedId}')"
-              style="margin-top:0.5rem;padding:0.3rem 0.9rem;background:#2563eb;color:#fff;border:none;border-radius:0.4rem;cursor:pointer;font-size:0.85rem">
+              style="margin-top:0.5rem;padding:0.3rem 0.9rem;background:#007038;color:#fff;border:none;border-radius:0.4rem;cursor:pointer;font-size:0.85rem">
               Details öffnen
             </button>
           </div>`
